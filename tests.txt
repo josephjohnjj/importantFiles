@@ -1,0 +1,11 @@
+
+
+potrf : mpiexec -np 1 ./tests/testing_dpotrf -c 8 -g 4 -p 1 -q 1 -t 1000 -T 1000 -N 100000 --nruns=2
+
+gemm : mpiexec -np 1 ./tests/testing_dgemm -c 8 -g 4 -p 1 -q 1 -t 1000 -T 1000 -N 100000 --nruns=2
+
+sparse gemm : mpiexec -np 1 ~/irr-gemm-gpu-over-parsec/build/src/testing_dgemm_irrse -P 1 -Q 1 -M 20000 -N 800000 -K 20000 -m 100 -n 100 -k 100
+
+vector multiplication : mpiexec -np 1 ~/dplasma/build/tests/testing_dgemm -c 40 -g 2 -p 1 -q 1 -t 1000  -T 1000 -N 100000 -M 100000 -K 1000 --nruns=2
+
+cuda profiling : ncu --target-processes all -o profile ./tests/testing_dpotrf -c 8 -g 4 -p 1 -q 1 -t 1000 -T 1000 -N 100000 --nruns=2
