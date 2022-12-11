@@ -67,12 +67,27 @@ list_total_evictions = []
 list_stage_in_initiated = []
 list_stage_in_required = []
 list_perc_eviction_for_stage_in_required = []
+list_tts = []
 
 #print(dir_path)
 onlyfiles = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
 #print(onlyfiles)
 
 for file in onlyfiles:
+
+    gflops  = 0
+    total_tasks_executed = 0
+    total_compute_tasks_executed  = 0
+    level0_tasks_migrated = 0
+    level1_tasks_migrated  = 0
+    level2_tasks_migrated = 0
+    total_affinity_tasks_executed  = 0
+    total_deals = 0
+    successful_deals = 0
+    total_evictions  = 0
+    stage_in_initiated = 0 
+    stage_in_required = 0
+    tts  = 0
     
     myfile = os.path.abspath(join(dir_path, file))
     print(myfile)
@@ -80,6 +95,19 @@ for file in onlyfiles:
     r = re.compile(r"[^0-9.]")
     with open (myfile, 'rt') as myfile: # Open file for reading text data.
         for myline in myfile:                # For each line, stored as myline,
+
+        
+            if(myline.find('Execution time =') != -1):
+                ' '.join(myline.split())  #replace multiple by one white space
+                list_of_words = myline.split()
+                next_word = list_of_words[list_of_words.index('time') + 2]
+                next_word = r.sub('', next_word)
+
+                if(float(next_word) > tts):
+                    tts = float(next_word) 
+                    tts = tts / 1000000000
+
+                #print(list_of_words)
 
             if(myline.find('gflops/s=') != -1):
                 ' '.join(myline.split())  #replace multiple by one white space
@@ -208,6 +236,8 @@ for file in onlyfiles:
 
     total_tasks_migrated = level0_tasks_migrated + level1_tasks_migrated + level2_tasks_migrated
 
+    list_tts.append(tts)
+
     #print("%s  = %s" % ('GFlops/s', gflops))
     list_gflops.append(gflops)
     #print("%s  = %s" % ('Total tasks executed', total_tasks_executed))
@@ -273,6 +303,8 @@ for file in onlyfiles:
 
 if(out_path == ""):
 
+    #print(list_gflops)
+    print("%s  : Min %s Max %s Avg %s" % ('Time to solution', min(list_tts), max(list_tts), sum(list_tts)/len(list_tts) ) )
     print("%s  : Min %s Max %s Avg %s" % ('GFlops', min(list_gflops), max(list_gflops), sum(list_gflops)/len(list_gflops) ) )
     print("%s  : Min %s Max %s Avg %s" % ('Total tasks', min(list_total_tasks_executed), max(list_total_tasks_executed), sum(list_total_tasks_executed)/len(list_total_tasks_executed) ) )
     print("%s  : Min %s Max %s Avg %s" % ('Compute tasks', min(list_total_compute_tasks_executed), max(list_total_compute_tasks_executed), sum(list_total_compute_tasks_executed)/len(list_total_compute_tasks_executed) ) )
@@ -296,6 +328,10 @@ else:
 
     outputFile = open(out_path, 'w')
 
+    out_string = 'Time to solution :' + ' Min ' +  str(min(list_tts)) + ' Max ' + str(max(list_tts)) + ' Avg ' + str(sum(list_tts)/len(list_tts)) + '\n'
+    outputFile.write(out_string)
+
+    #print(list_gflops)
     out_string = 'GFlops :' + ' Min ' +  str(min(list_gflops)) + ' Max ' + str(max(list_gflops)) + ' Avg ' + str(sum(list_gflops)/len(list_gflops)) + '\n'
     outputFile.write(out_string)
 
