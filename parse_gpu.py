@@ -47,6 +47,8 @@ successful_deals = 0.0
 total_evictions  = 0.0
 stage_in_initiated = 0.0
 stage_in_required = 0.0
+total_files  = 0.0
+thrashing = 0
 
 list_gflops = []
 list_total_tasks_executed = []
@@ -68,6 +70,7 @@ list_stage_in_initiated = []
 list_stage_in_required = []
 list_perc_eviction_for_stage_in_required = []
 list_tts = []
+list_thrashing = []
 
 #print(dir_path)
 onlyfiles = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
@@ -88,9 +91,11 @@ for file in onlyfiles:
     stage_in_initiated = 0 
     stage_in_required = 0
     tts  = 0
+    thrashing = 0
     
     myfile = os.path.abspath(join(dir_path, file))
     print(myfile)
+    total_files = total_files + 1
 
     r = re.compile(r"[^0-9.]")
     with open (myfile, 'rt') as myfile: # Open file for reading text data.
@@ -230,6 +235,15 @@ for file in onlyfiles:
                 #print(list_of_words)
 
 
+            if(myline.find('Total Thrashing                        :') != -1):
+                ' '.join(myline.split())  #replace multiple by one white space
+                list_of_words = myline.split()
+                next_word = list_of_words[list_of_words.index('Thrashing') + 2]
+                next_word = r.sub('', next_word)               
+                if(float(next_word) > thrashing):
+                    thrashing = float(next_word)
+
+
 
 
     myfile.close()   
@@ -301,9 +315,15 @@ for file in onlyfiles:
         #print("%s  = %s" % ('Perc eviction for stage in required', 0) )
         list_perc_eviction_for_stage_in_required.append(0)
 
+    if(thrashing > 0):
+        list_thrashing.append(thrashing)
+    else:
+        list_thrashing.append(0)
+
 if(out_path == ""):
 
     #print(list_gflops)
+    print("%s  : %s" % ('Total files', total_files ) )
     print("%s  : Min %s Max %s Avg %s" % ('Time to solution', min(list_tts), max(list_tts), sum(list_tts)/len(list_tts) ) )
     print("%s  : Min %s Max %s Avg %s" % ('GFlops', min(list_gflops), max(list_gflops), sum(list_gflops)/len(list_gflops) ) )
     print("%s  : Min %s Max %s Avg %s" % ('Total tasks', min(list_total_tasks_executed), max(list_total_tasks_executed), sum(list_total_tasks_executed)/len(list_total_tasks_executed) ) )
@@ -324,9 +344,13 @@ if(out_path == ""):
     print("%s  : Min %s Max %s Avg %s" % ('Stagein initiated', min(list_stage_in_initiated), max(list_stage_in_initiated), sum(list_stage_in_initiated)/len(list_stage_in_initiated) ) )
     print("%s  : Min %s Max %s Avg %s" % ('Stagein required', min(list_stage_in_required), max(list_stage_in_required), sum(list_stage_in_required)/len(list_stage_in_required) ) )
     print("%s  : Min %s Max %s Avg %s" % ('Perc. eviction per req. stagein', min(list_perc_eviction_for_stage_in_required), max(list_perc_eviction_for_stage_in_required), sum(list_perc_eviction_for_stage_in_required)/len(list_perc_eviction_for_stage_in_required) ) )
+    print("%s  : Min %s Max %s Avg %s" % ('Thrashing', min(list_thrashing), max(list_thrashing), sum(list_thrashing)/len(list_thrashing) ) )
 else:
 
     outputFile = open(out_path, 'w')
+
+    out_string = 'Total files :' +  str(total_files) + '\n'
+    outputFile.write(out_string)
 
     out_string = 'Time to solution :' + ' Min ' +  str(min(list_tts)) + ' Max ' + str(max(list_tts)) + ' Avg ' + str(sum(list_tts)/len(list_tts)) + '\n'
     outputFile.write(out_string)
@@ -387,6 +411,9 @@ else:
     outputFile.write(out_string)
 
     out_string = 'Perc. eviction per req. stagein' + ' Min ' + str(min(list_perc_eviction_for_stage_in_required)) + ' Max ' + str(max(list_perc_eviction_for_stage_in_required)) + ' Avg ' + str(sum(list_perc_eviction_for_stage_in_required)/len(list_perc_eviction_for_stage_in_required) ) + '\n'
+    outputFile.write(out_string)
+    
+    out_string = 'Thrashing' + ' Min ' + str(min(list_thrashing)) + ' Max ' + str(max(list_thrashing)) + ' Avg ' + str(sum(list_thrashing)/len(list_thrashing) ) + '\n'
     outputFile.write(out_string)
 
     outputFile.close()
